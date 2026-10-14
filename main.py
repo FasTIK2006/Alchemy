@@ -1,68 +1,105 @@
-class Ingredient:
-    def __init__(self, name, price, rarity, effect):
-        self.name = name
-        self.price = price
-        self.rarity = rarity
-        self.effect = effect
+from inventory import Inventory
+from ingredients import ingredients
+from potions import potions
+from crafting import craft
+from recipes import recipes
 
-    def __str__(self):
-        return f"{self.name} {self.price} {self.rarity} {self.effect}"
+def show_menu():
+    print("\n=== АЛХИМИЯ ===")
+    print("1. Показать инвентарь")
+    print("2. Добавить ингредиент")
+    print("3. Сварить зелье")
+    print("4. Показать все рецепты")
+    print("0. Выход")
 
-ingredients = {
-    "mint": Ingredient(
-        "Мята",
-        5,
-        "Обычная",
-        "Лечение"
-    ),
+def main():
+    inventory = Inventory()
+    # немного ингредиентов для старта
+    inventory.add("mint", 3)
+    inventory.add("water", 3)
+    inventory.add("fire_flower", 2)
 
-    "water": Ingredient(
-        "Капля росы",
-        7,
-        "Обычная",
-        "Очищение"
-    ),
+    while True:
+        show_menu()
+        choice = input("Выберите действие: ").strip()
 
-    "fire_flower": Ingredient(
-        "Огненный цветок",
-        10,
-        "Обычная",
-        "Энергия"
-    ),
+        if choice == "1":
+            inventory.show(ingredients, potions)
 
-    "moon_dust": Ingredient(
-        "Лунная пыль",
-        20,
-        "Редкая",
-        "Магия"
-    ),
+        elif choice == "2":
+            add_ingredient(inventory)
 
-    "mushroom": Ingredient(
-        "Светящийся гриб",
-        12,
-        "Необычная",
-        "Магия"
-    ),
+        elif choice == "3":
+            brew_potion(inventory)
 
-    "lavender": Ingredient(
-        "Лаванда",
-        8,
-        "Обычная",
-        "Спокойствие"
-    ),
+        elif choice == "4":
+            show_recipes()
 
-    "dragon_scale": Ingredient(
-        "Чешуя дракона",
-        50,
-        "Легендарная",
-        "Сила"
-    ),
+        elif choice == "0":
+            print("До встречи!")
+            break
 
-    "shadow_herb": Ingredient(
-        "Теневая трава",
-        25,
-        "Редкая",
-        "Тьма"
-    )
-}
-print(ingredients["mint"])  # Output: Мята 5 Обычная Лечение
+        else:
+            print("❌ Нет такого пункта")
+
+
+def add_ingredient(inventory):
+    print("\nДоступные ингредиенты:")
+    for i, (ingredient_id, ingredient) in enumerate(ingredients.items(), 1):
+        print(f"  {i}. {ingredient.name} (id: {ingredient_id})")
+
+    ingredient_id = input("Введите id ингредиента: ").strip()
+
+    if ingredient_id not in ingredients:
+        print("❌ Такого ингредиента нет")
+        return
+
+    try:
+        amount = int(input("Сколько добавить? ").strip())
+        if amount <= 0:
+            print("❌ Количество должно быть больше 0")
+            return
+    except ValueError:
+        print("❌ Нужно ввести число")
+        return
+
+    inventory.add(ingredient_id, amount)
+    print(f"✔ Добавлено: {ingredients[ingredient_id].name} x{amount}")
+
+
+def brew_potion(inventory):
+    print("\nВведите id ингредиентов через пробел.")
+    print("Например: mint water")
+
+    raw = input("Ингредиенты: ").strip()
+    selected = raw.split()
+
+    if not selected:
+        print("❌ Ничего не выбрано")
+        return
+
+    # проверяем, что все id существуют
+    for ingredient_id in selected:
+        if ingredient_id not in ingredients:
+            print(f"❌ Неизвестный ингредиент: {ingredient_id}")
+            return
+
+    craft(inventory, selected)
+
+
+def show_recipes():
+
+    print("\n=== РЕЦЕПТЫ ===")
+    if not recipes:
+        print("Рецептов пока нет")
+        return
+
+    for combination, recipe in recipes.items():
+        names = ", ".join(ingredients[i].name for i in combination)
+        potion = potions[recipe["potion_id"]]
+        print(f"  {names}  →  {potion.name} (+{recipe['xp']} XP)")
+
+
+if __name__ == "__main__":
+    main()
+
